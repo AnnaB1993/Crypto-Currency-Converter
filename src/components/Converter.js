@@ -1,11 +1,50 @@
 import { useState } from "react";
 import ExchangeRate from "./ExchangeRate";
+import axios from "axios";
 
 const Converter = () => {
   const currencies = ["BTC", "ETH", "USD", "XRP", "LTC", "ADA"];
   const [chosenPrimaryCurrency, setChosenPrimaryCurrency] = useState("BTC");
   const [chosenSecondaryCurrency, setChosenSecondaryCurrency] = useState("BTC");
-console.log(chosenSecondaryCurrency)
+  const [amount, setAmount] = useState(1);
+  const [exchangedData, setExchangedData] = useState({
+    primaryCurrency: "BTC",
+    secondaryCurrency: "BTC",
+    exchangeRate: 0,
+  });
+  const [result, setResult] = useState(0);
+
+
+  const convert = () => {
+    const options = {
+      method: "GET",
+      url: "http://localhost:8000/convert",
+      params: {
+        from_currency: chosenPrimaryCurrency,
+        function: "CURRENCY_EXCHANGE_RATE",
+        to_currency: chosenSecondaryCurrency,
+      },
+    };
+
+    axios
+      .request(options)
+      .then((response) => {
+        console.log(response.data["Realtime Currency Exchange Rate"] ["5. Exchange Rate"]);
+        setExchangedData({
+          primaryCurrency: chosenPrimaryCurrency,
+          secondaryCurrency: chosenSecondaryCurrency,
+          exchangeRate: response.data["Realtime Currency Exchange Rate"] ["5. Exchange Rate"]
+        });
+        setResult((response.data["Realtime Currency Exchange Rate"] ["5. Exchange Rate"]) * amount);
+        console.log(amount);
+        console.log(result);
+        console.log(exchangedData);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
   return (
     <div className="currency-converter">
       <h2>Currency Converter</h2>
@@ -15,7 +54,12 @@ console.log(chosenSecondaryCurrency)
             <tr>
               <td>Primary Currency: </td>
               <td>
-                <input type="number" name="currency-amount-1" value={""} />
+                <input
+                  type="number"
+                  name="currency-amount-1"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
               </td>
               <td>
                 <select
@@ -33,7 +77,12 @@ console.log(chosenSecondaryCurrency)
             <tr>
               <td>Secondary Currency: </td>
               <td>
-                <input type="number" name="currency-amount-2" value={""} />
+                <input
+                  type="number"
+                  name="currency-amount-2"
+                  value={result}
+                  disabled={true}
+                />
               </td>
               <td>
                 <select
@@ -50,8 +99,11 @@ console.log(chosenSecondaryCurrency)
             </tr>
           </tbody>
         </table>
+        <button id="convert-button" onClick={convert}>
+          Convert
+        </button>
       </div>
-      <ExchangeRate />
+      <ExchangeRate exchangedData={exchangedData} />
     </div>
   );
 };
